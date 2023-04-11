@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .anim {
+    @apply transition-all ease-in-out duration-300
+  }
+
+  .hover-opa {
+    @apply cursor-pointer duration-300 hover:opacity-75
+  }
+
+  .input-login {
+    @apply w-full outline-none bg-transparent text-white placeholder:text-slate-400 p-2.5 px-5 rounded-2xl border border-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 duration-700 mt-2
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center w-20 py-2 text-sm font-medium text-center text-white rounded-lg focus:ring-4 focus:outline-none bg-blue-600 hover:bg-blue-700 focus:ring-blue-800 hover-opa
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center w-20 py-2 text-sm font-medium text-center border rounded-lg focus:ring-4 focus:outline-none bg-gray-800 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-700 focus:ring-gray-700 hover-opa
+  }
+
+  .label-form {
+    @apply block text-sm font-medium mb-1
+}
+
+  .input-form {
+    @apply outline-none w-full bg-transparent p-2.5 px-3 text-sm rounded-lg border-[1.8px] border-gray-500 focus:ring-[1.8px] focus:ring-gray-500 focus:border-gray-500 placeholder-gray-500 anim
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -25,3 +55,73 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+
+/*** MODAL STYLE ***/
+@keyframes background-in {
+  0% {
+      scale: 0 0.005;
+  }
+
+  33% {
+      scale: 1 0.005;
+  }
+
+  66%,
+  100% {
+      scale: 1 1;
+  }
+}
+
+.modal-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1, 1);
+  background: rgba(0, 0, 0, 0.6);
+  transition: 0.5s;
+  z-index: 50;
+}
+
+.open.modal-background {
+  visibility: visible;
+  opacity: 1;
+  animation: background-in 1s both;
+}
+
+@keyframes modal-in {
+  0%,
+  66% {
+      opacity: 0;
+      visibility: hidden;
+      translate: -50% -30%;
+  }
+
+  100% {
+      opacity: 1;
+      visibility: visible;
+  }
+}
+
+.modal {
+  @apply fixed top-1/2 left-1/2 w-[91.6%] md:w-[62%] 2xl:w-1/2 bg-gray-800 border-gray-700 text-white rounded-xl opacity-0 invisible duration-300 z-50
+}
+
+.open.modal {
+  opacity: 1;
+  visibility: visible;
+  animation: modal-in 1s;
+}
+
+.closed.modal {
+  opacity: 0;
+  visibility: hidden;
+  translate: -50% -50%;
+}
+/*** END MODAL STYLE  ***/
