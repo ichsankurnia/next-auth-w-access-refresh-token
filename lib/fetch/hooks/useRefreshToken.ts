@@ -13,7 +13,7 @@ export const useRefreshToken = () => {
       }
       const res = await axios.post("/credentials/refresh-token", payload);
 
-      console.log('REFRESH TOKEN')
+      console.log('REFRESH TOKEN FROM CLIENT')
       console.log(res)
 
       if (session) {

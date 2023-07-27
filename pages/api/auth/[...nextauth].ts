@@ -6,97 +6,41 @@ import { BASE_URL } from "@/lib/fetch/axios";
 import { NextApiRequest, NextApiResponse } from "next";
 
 
-// export const authOptions: NextAuthOptions = {
-//     // Configure one or more authentication providers
-//     providers: [
-//         GoogleProvider({
-//             clientId: process.env.GOOGLE_ID!,
-//             clientSecret: process.env.GOOGLE_SECRET!,
-//         }),
-//         GitHubProvider({
-//             clientId: process.env.GITHUB_ID!,
-//             clientSecret: process.env.GITHUB_SECRET!,
-//         }),
-//         CredentialsProvider({
-//             // The name to display on the sign in form (e.g. "Sign in with...")
-//             name: "Credentials",
-//             credentials: {
-//                 username: {},
-//                 password: {}
-//             },
-//             async authorize(credentials: any, req) {
-//                 // Add logic here to look up the user from the credentials supplied
+// const EXP_SESSION = 24 * 60 * 60 // 1 days
+const EXP_SESSION = 10 // 10 seconds
 
-//                 const res = await fetch(BASE_URL + "/auth-appdir/sign-in", {
-//                     method: "POST",
-//                     headers: {
-//                         "Content-Type": "application/json",
-//                     },
-//                     body: JSON.stringify({
-//                         username: credentials?.username,
-//                         password: credentials?.password,
-//                     }),
-//                 });
 
-//                 const data: any = await res.json();
-//                 console.log("LOGIN :", data)
+async function refreshAccessToken(token: any) {
+    // If the access token has expired, try to refresh it
+    console.log("=========================== ACCESS TOKEN EXPIRED, REFRESH THE TOKEN ===========================")
+    console.log({ token })
+    try {
+        const response = await fetch(BASE_URL + "/credentials/refresh-token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                refresh_token: token?.refresh_token
+            }),
+        })
 
-//                 if (res.ok) {
-//                     if (data) {
-//                         // Any object returned will be saved in `user` property of the JWT
-//                         return data.data;
-//                     } else {
-//                         // // If you return null then an error will be displayed advising the user to check their details.
-//                         // return null;
+        const data = await response.json()
 
-//                         // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
-//                         throw new Error(`Invalid username or password`)
-//                     }
-//                 } else {
-//                     throw new Error(data.message)
-//                 }
+        if (!response.ok) throw token
 
-//                 // const user: any = await UserModel.findOne({ username })
-//                 // if (!user) {
-//                 //     throw new Error('Username not registered!')
-//                 // }
+        return {
+            ...token, // Keep the previous token properties
+            access_token: data.data.access_token,
+            expired_at: Math.floor(Date.now() + EXP_SESSION * 1000),
+            refresh_token: data.data.refresh_token ?? token.refresh_token,
+        }
+    } catch (error) {
+        console.error("Error refreshing access token", error)
+        return { ...token, error: "RefreshAccessTokenError" as const }
+    }
+}
 
-//                 // const userByPwd = await UserModel.findOne({ username, password })
-//                 // if (!userByPwd) {
-//                 //     throw new Error(`Invalid password for username ${username}`)
-//                 //     // return null
-//                 // }
-
-//                 // return userByPwd
-//             },
-//         })
-//         // ...add more providers here
-//     ],
-//     session: {
-//         strategy: "jwt",
-//     },
-//     pages: {
-//         signIn: '/login',
-//         // error: '/auth'
-//     },
-//     callbacks: {
-//         async jwt({ token, user, trigger, session, account, profile }: any) {
-//             console.log("NEXTAUTH :", { token, user, trigger, session })
-//             if (trigger === "update" && session?.access_token) {
-//                 // Note, that `session` can be any arbitrary object, remember to validate it!
-//                 return session
-//             }
-//             return { ...token, ...user };
-//         },
-//         async session({ session, token, user }) {
-//             // Send properties to the client, like an access_token from a provider.
-//             console.log("SESSION :", { session, token, user })
-//             session.user = token as any;
-
-//             return session;
-//         },
-//     },
-// }
 
 export const authOptions = (req?: NextApiRequest): AuthOptions => ({
     providers: [
@@ -130,35 +74,18 @@ export const authOptions = (req?: NextApiRequest): AuthOptions => ({
                 });
 
                 const data: any = await res.json();
-                console.log("LOGIN :", data)
 
                 if (res.ok) {
                     if (data) {
-                        // Any object returned will be saved in `user` property of the JWT
+                        data.data.expired_at = Date.now() + EXP_SESSION * 1000
+                        console.log("LOGIN :", data)
                         return data.data;
                     } else {
-                        // // If you return null then an error will be displayed advising the user to check their details.
-                        // return null;
-
-                        // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
                         throw new Error(`Invalid username or password`)
                     }
                 } else {
                     throw new Error(data.message)
                 }
-
-                // const user: any = await UserModel.findOne({ username })
-                // if (!user) {
-                //     throw new Error('Username not registered!')
-                // }
-
-                // const userByPwd = await UserModel.findOne({ username, password })
-                // if (!userByPwd) {
-                //     throw new Error(`Invalid password for username ${username}`)
-                //     // return null
-                // }
-
-                // return userByPwd
             },
         })
         // ...add more providers here
@@ -175,9 +102,35 @@ export const authOptions = (req?: NextApiRequest): AuthOptions => ({
             // console.log("NEXTAUTH :", { token, user, trigger, session })
             if (trigger === "update" && session?.access_token) {
                 // Note, that `session` can be any arbitrary object, remember to validate it!
-                return session
+                console.log("====================================== MASUK KE SESSION ========================================")
+                console.log("============================ SESSION UPDATED FROM THE CLIENT ===================================")
+                console.log({ session })
+                return {
+                    ...session, // Keep the previous token properties
+                    expired_at: Math.floor(Date.now() + EXP_SESSION * 1000),
+                }
+                // return session
             }
-            return { ...token, ...user };
+
+            if (user) {
+                console.log("============================ MASUK KE USER ===================================")
+                console.log({ user })
+                return {
+                    ...token,
+                    ...user
+                }
+            }
+
+            // Return previous token if the access token has not expired yet
+            if (Date.now() < token.expired_at) {
+                console.log('================================= EXISTING ACCESS TOKEN IS VALID ===============================')
+                console.log({ DATE_NOW: Date.now(), EXPIRED_AT: token.expired_at })
+                return token
+            }
+
+            // Access token has expired, so we need to redresh it..
+            console.log('ACCESS TOKEN HAS EXPIRED, REFERSHING...')
+            return await refreshAccessToken(token)
         },
         async session({ session, token, user }) {
             // Send properties to the client, like an access_token from a provider.

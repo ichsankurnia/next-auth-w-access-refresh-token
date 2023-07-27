@@ -77,7 +77,7 @@ const page: FC<Props> = () => {
         mutate()
     }
 
-    if (error) return <div>failed to load</div>
+    if (error) return <div>oops.. something error, try to load...</div>
     if (isLoading) return <div>loading...</div>
 
     // render data
