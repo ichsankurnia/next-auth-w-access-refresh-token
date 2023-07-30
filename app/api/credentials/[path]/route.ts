@@ -106,7 +106,7 @@ const login = async (req: NextRequest) => {
 
 const getNewToken = async (req: NextRequest) => {
     try {
-        console.log("FETCH NEW TOKEN")
+        // console.log("FETCH NEW TOKEN")
         let response = { code: 401, message: 'Failed to fetch new token', data: null as any }
 
         const reqBody = await req.json()
@@ -115,7 +115,7 @@ const getNewToken = async (req: NextRequest) => {
             refresh_token: Joi.string().required(),
         })
 
-        console.log("REFRESH TOKEN :", reqBody.refresh_token)
+        // console.log("REFRESH TOKEN :", reqBody.refresh_token)
 
         const { error } = schema.validate(reqBody)
         if (error) return ValidationError(error.message)
@@ -157,7 +157,7 @@ const getNewToken = async (req: NextRequest) => {
             response.message = 'Refresh token not found'
         }
 
-        console.log(response)
+        // console.log(response)
 
         return NextResponse.json(
             response,

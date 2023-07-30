@@ -13,7 +13,7 @@ const EXP_SESSION = 10 // 10 seconds
 async function refreshAccessToken(token: any) {
     // If the access token has expired, try to refresh it
     console.log("=========================== ACCESS TOKEN EXPIRED, REFRESH THE TOKEN ===========================")
-    console.log({ token })
+
     try {
         const response = await fetch(BASE_URL + "/credentials/refresh-token", {
             method: "POST",
@@ -104,11 +104,13 @@ export const authOptions = (req?: NextApiRequest): AuthOptions => ({
                 // Note, that `session` can be any arbitrary object, remember to validate it!
                 console.log("====================================== MASUK KE SESSION ========================================")
                 console.log("============================ SESSION UPDATED FROM THE CLIENT ===================================")
-                console.log({ session })
-                return {
+
+                const newSession = {
                     ...session, // Keep the previous token properties
                     expired_at: Math.floor(Date.now() + EXP_SESSION * 1000),
                 }
+                console.log({ session: newSession })
+                return newSession
                 // return session
             }
 
